@@ -1,0 +1,209 @@
+#upload-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+  background-color: #4caf50;
+  color: white;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+#upload-panel-text {
+  flex-grow: 1;
+}
+
+#upload-status {
+  font-size: 12px;
+  color: #dddddd;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+#status-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* This will horizontally center the text as well */
+  height: 40px;
+  /* Adjust the height as needed */
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f8f8f8;
+  /* Example color */
+  color: #333;
+  padding: 10px;
+  text-align: left;
+  border-top: 1px solid #ccc;
+  text-align: left;
+  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#status-message {
+  /* Styles for the status message */
+  font-family: Arial, sans-serif;
+}
+
+
+#BOM-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  /* Ensure it's above other elements */
+  font-family: Arial, sans-serif;
+}
+
+#BOM-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  max-width: 80%;
+  /* Adjust as needed */
+  max-height: 80%;
+  /* Adjust as needed */
+  overflow-y: auto;
+  /* Enable scroll if content is too long */
+}
+
+#close-BOM-container {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+  margin-left: 20px;
+}
+
+/* Table Styles */
+#BOM-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#BOM-table th,
+#BOM-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+#BOM-table th {
+  background-color: #4caf50;
+  color: white;
+}
+
+#BOM-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#BOM-table tr:hover {
+  background-color: #ddd;
+}
+
+/* Align the 3rd column to the right */
+#BOM-table td:nth-child(3) {
+  text-align: right;
+}
+
+#show-BOM-btn {
+  padding: 5px 10px;
+  margin-right: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#show-BOM-btn:hover {
+  background-color: #367c39;
+}
+
+#show-Commands-btn {
+    padding: 5px 10px;
+    margin-right: 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  #show-Commands-btn:hover {
+    background-color: #367c39;
+  }
+
+#Command-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  /* Ensure it's above other elements */
+  font-family: Arial, sans-serif;
+}
+
+#Command-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  max-width: 80%;
+  /* Adjust as needed */
+  max-height: 80%;
+  /* Adjust as needed */
+  overflow-y: auto;
+  /* Enable scroll if content is too long */
+}
+
+#close-Command-container {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+  margin-left: 20px;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column; /* Stack controls vertically */
+    width: 100%;
+  }
+  
+  .controls button, .controls input[type="checkbox"] + label {
+    cursor: pointer;
+    margin: 5px 0; /* Add some space between controls */
+  }
+  
+  .controls button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+  }
+
+  .controls button:hover {
+    background-color: #367c39;
+  }
+  
+  .controls input[type="checkbox"] {
+    margin-right: 5px;
+  }
+  
+  /* Style the label to be inline with checkbox */
+  .controls label {
+    display: flex;
+  }

@@ -1,0 +1,1 @@
+VENV3806\Scripts\Python Main.py

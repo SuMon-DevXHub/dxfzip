@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Panels Layout</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100%;
+        }
+
+        .side-panel {
+            width: 300px;
+            background-color: #f0f0f0;
+            height: 100%;
+            overflow: auto;
+        }
+
+        #middle-content {
+            flex-grow: 1;
+            background-color: #fff;
+            height: 100%;
+            overflow: auto;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div id="left-panel" class="side-panel">
+            <button onclick="togglePanel('left')">Collapse Left</button>
+            <!-- Left panel content goes here -->
+        </div>
+
+        <div id="middle-content">
+            <!-- Middle content goes here -->
+        </div>
+
+        <div id="right-panel" class="side-panel">
+            <button onclick="togglePanel('right')">Collapse Right</button>
+            <!-- Right panel content goes here -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+<script>
+    function togglePanel(side) {
+        const panelId = side + '-panel';
+        const panel = document.getElementById(panelId);
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
+
+</html>

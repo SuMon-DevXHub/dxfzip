@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parkolay DXF Analyzer</title>
+  <!-- Bootstrap CSS -->
+  <base href="{{ base_url }}">
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" , type="text/css" href="/static/css/style.css">
+  <script src="/static/js/babylon.js"></script>
+  <script src="/static/js/babylonjs.loaders.min.js"></script>
+  <script src="/static/js/earcut.min.js"></script>
+  <script src="/static/js/babylon.gui.min.js"></script>
+  <script src="/static/js/babylonjs.serializers.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      /* Remove default margin */
+      overflow: hidden;
+      /* Optional: Prevent scrollbars from appearing when not needed */
+    }
+
+    .main-container {
+      display: flex;
+      /* Use flexbox to layout children */
+      height: 100vh;
+      /* Full viewport height */
+      align-items: stretch;
+      /* Stretch children full height */
+    }
+
+    /* Custom styles for sidebars */
+    .leftbar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 300px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      transition: width 0.3s;
+    }
+
+    .rightbar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 250px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      transition: width 0.3s;
+    }
+
+    #leftSidebar {
+      left: 0;
+      background-color: rgb(200, 200, 200);
+      border-right: 3px solid black;
+    }
+
+    #rightSidebar {
+      right: 0;
+      background: rgb(200, 200, 200);
+      border-left: 3px solid black;
+    }
+
+    .leftbar h6 {
+      border-bottom: 2px solid black;
+      padding-bottom: 10px;
+    }
+
+    .leftbar button {
+      margin-bottom: 10px;
+    }
+
+
+    .rightbar h6 {
+      border-bottom: 2px solid black;
+      padding-bottom: 10px;
+    }
+
+    .rightbar button {
+      margin-bottom: 10px;
+    }
+
+    .content1 {
+      flex-grow: 1;
+      /* Grow to fill the available space */
+      /* Ensure the canvas is styled correctly to fill its container */
+      width: 100%;
+      /* Take up all available width */
+      height: 100%;
+      /* Take up all available height */
+    }
+
+    .contents {
+      position: absolute;
+      top: 0px;
+      left: 300px;
+      right: 250px;
+      height: 100vh;
+    }
+
+    .LoadingScreen {
+      background-color: #FFFFFF;
+      position: absolute;
+      /*color: black;
+      font-size: 30px;
+      text-align: center;
+      line-height: 100vh;*/
+      top: 0px;
+      left: 300px;
+      right: 250px;
+      height: 100vh;
+    }
+
+    .short-range {
+      width: 100px;
+      /* Set to desired length */
+    }
+
+    .MessageList {
+      max-height: 95vh;
+      /* Adjust based on your needs */
+      overflow-y: auto;
+      /* Shows scrollbar only when needed */
+      margin-top: 20px;
+      padding: 5px;
+    }
+
+    .bold-green-icon {
+      font-weight: bold;
+      /* Make it bold */
+      color: red;
+      /* Change the color to green */
+    }
+
+    /* Style for the buttons */
+    .bartogglebtn {
+      font-size: 24px;
+      /* Larger font size for the arrow */
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Left Sidebar - Control Panel -->
+    <div id="leftSidebar" class="leftbar d-flex flex-column align-items-center pt-2">
+      <button id="leftbartoggle" class="bartogglebtn" onclick="toggleSidebar('left')">&#x27A4;</button>
+      <div class="container my-3">
+        <div class="row mb-0 mt-0">
+          <div class="col-6">
+            <h6 class="medium">Loaders</h6>
+          </div>
+          <div class="col-6">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="CBMessage"
+                onchange="toggleMessages(this.checked)">
+              <label class="custom-control-label" for="CBMessage">Messages</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-0">
+          <div class="col">
+            <form id="file-form" action="/upload" method="post" enctype="multipart/form-data">
+              <button type="button" class="btn btn-warning btn-block btn-sm"
+                onclick="document.getElementById('dxf-input').click();">DXF</button>
+              <input type="file" id="dxf-input" name="dxfInput" accept=".dxf" style="display: none;"
+                onchange="uploadDXF()">
+            </form>
+          </div>
+          <div class="col">
+            <form id="file-form" action="/upload" method="post" enctype="multipart/form-data">
+              <button type="button" class="btn btn-warning btn-block btn-sm"
+                onclick="document.getElementById('CFG-input').click();">SQLite</button>
+              <input type="file" id="CFG-input" name="cfgInput[]" accept=".sqlite" style="display: none;"
+                onchange="uploadCFG()">
+            </form>
+          </div>
+        </div>
+
+        <div class="row mb-0">
+          <div class="col">
+            <form id="file-form" action="/uploadpoly" method="post" enctype="multipart/form-data">
+              <button type="button" class="btn btn-success btn-block btn-sm"
+                onclick="document.getElementById('Poly-input').click();">Polygon</button>
+              <input type="file" id="Poly-input" name="PolyInput" accept=".dxf" style="display: none;"
+                onchange="uploadPoly()">
+            </form>
+          </div>
+          <div class="col">
+            <form id="file-form" action="/uploadobj" method="post" enctype="multipart/form-data">
+              <button type="button" class="btn btn-success btn-block btn-sm"
+                onclick="document.getElementById('Obj-input').click();">Object</button>
+              <input type="file" id="Obj-input" name="ObjInput[]" accept=".obj,.mtl" style="display: none;"
+                onchange="uploadObject()" multiple>
+            </form>
+          </div>
+        </div>
+
+        <div class="row mb-0">
+          <div class="col">
+            <h6 class="medium">Views</h6>
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-6">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="CBOrtho" onchange="toggleOrtho(this.checked)">
+              <label class="custom-control-label" for="CBOrtho">Ortho</label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="CBDebug" onchange="toggleDebug(this.checked)">
+              <label class="custom-control-label" for="CBDebug">Debug</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-0">
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setTopView()">Top</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setBottomView()">Bottom</button>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setLeftView()">Left</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setRightView()">Right</button>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setFrontView()">Front</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="setBackView()">Back</button>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <button class="btn btn-success btn-block btn-sm" onclick="takePicture();">Take Picture</button>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <button class="btn btn-success btn-block btn-sm" onclick="saveScene();">Save Scene</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-primary btn-block btn-sm" onclick="loadScene();">Load Scene</button>
+            <input type="file" id="fileInput" style="display: none;" onchange="handleFile(this.files)">
+          </div>
+        </div>
+
+
+        <div class="row mb-0 mt-2">
+          <div class="col">
+            <h6 class="medium">Light Control</h6>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> Light:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="200" step="1" id="LightRange" value="100"
+              oninput=" updateLightValue(value)">
+            <span id="LightValue">100</span>
+          </div>
+        </div>
+
+        <div class="row mb-0 mt-2">
+          <div class="col">
+            <h6 class="medium">Clip Planes</h6>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>+X:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="100" step="1" id="XClipRange" value="0"
+              oninput=" updateClipPlane(0,value)">
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>-X:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="100" step="1" id="EXClipRange" value="0"
+              oninput=" updateClipPlane(1,value)">
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>+Y:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="100" step="1" id="ZClipRange" value="0"
+              oninput=" updateClipPlane(4,value)">
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>-Y:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="180" step="1" id="EZClipRange" value="0"
+              oninput=" updateClipPlane(5,value)">
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>+Z:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="100" step="1" id="YClipRange" value="0"
+              oninput=" updateClipPlane(2,value)">
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span>-Z:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="100" step="1" id="EYClipRange" value="0"
+              oninput=" updateClipPlane(3,value)">
+          </div>
+        </div>
+
+
+        <div class="row mb-0 mt-2">
+          <div class="col">
+            <h6 class="medium">Camera Control</h6>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> FOV:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="120" step="1" id="FOVRange" value="45"
+              oninput=" updateFOVValue(value)">
+            <span id="FOVValue">45</span>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> Alpha:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="360" step="1" id="AlphaRange" value="100"
+              oninput=" updateAlphaValue(value)">
+            <span id="AlphaValue">100</span>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> Beta:</span>
+          </div>
+          <div class="col-9">
+            <input type="range" class="form-range" min="0" max="180" step="1" id="BetaRange" value="100"
+              oninput=" updateBetaValue(value)">
+            <span id="BetaValue">100</span>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> Distance:</span>
+          </div>
+          <div class="col-9">
+            <input type="number" class="form-control  form-control-sm" id="DistanceInput" name="DistanceInput" min="0"
+              step="100" value="0" oninput=" updateDistanceValue(value)">
+          </div>
+        </div>
+        <div class="row mb-0 mt-2">
+          <div class="col">
+            <span onclick=" CenterTarget()"> Target:</span>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-3">
+            <span> X:</span>
+          </div>
+          <div class="col-9">
+            <input type="number" class="form-control  form-control-sm" id="TargetX" name="TargetX" step="100" value="0"
+              oninput=" SetTargetX(value)">
+          </div>
+          <div class="col-3">
+            <span> Y:</span>
+          </div>
+          <div class="col-9">
+            <input type="number" class="form-control  form-control-sm" id="TargetY" name="TargetY" step="100" value="0"
+              oninput=" SetTargetY(value)">
+          </div>
+          <div class="col-3">
+            <span> Z:</span>
+          </div>
+          <div class="col-9">
+            <input type="number" class="form-control  form-control-sm" id="TargetZ" name="TargetZ" step="100" value="0"
+              oninput=" SetTargetZ(value)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Right Sidebar - Properties Panel -->
+    <div id="rightSidebar" class="rightbar d-flex flex-column align-items-center pt-2">
+      <button id="rightbartoggle" class="bartogglebtn" onclick="toggleSidebar('right')">&#x27A4;</button>
+
+      <div class="container my-3">
+        <div class="row mb-0">
+          <div class="col">
+            <h6 class="medium">Visibility</h6>
+          </div>
+        </div>
+        <div id="DivBuildingPart">
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBSteelVis" name="CBSteelVis" onchange="VisCheckboxChanged('Steel')" checked>
+            <label for="CBSteelVis">Steel</label>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBCarriersVis" name="CBCarriersVis" onchange="VisCheckboxChanged('Carriers')"
+              checked>
+            <label for="CBCarriersVis">Carriers</label>
+          </div>
+        </div>
+        <div id="CBCarrPart">
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBRoomsVis" name="CBRoomsVis" onchange="VisCheckboxChanged('Rooms')" checked>
+            <label for="CBRoomsVis">Rooms</label>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBShelvesVis" name="CBShelvesVis" onchange="VisCheckboxChanged('Shelves')"
+              checked>
+            <label for="CBShelvesVis">Shelves</label>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBPalletsVis" name="CBPalletsVis" onchange="VisCheckboxChanged('Pallets')"
+              checked>
+            <label for="CBPalletsVis">Pallets</label>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <input type="checkbox" id="CBCarsVis" name="CBCarsVis" onchange="VisCheckboxChanged('Cars')" checked>
+            <label for="CBCarsVis">Cars</label>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col">
+            <input type="checkbox" id="CBObjectsVis" name="CBObjectsVis" onchange="VisCheckboxChanged('Objects')"
+              checked>
+            <label for="CBObjectsVis">Objects</label>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col">
+            <h6 class="medium">Animation</h6>
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBTurningAnim" name="CBTurningAnim">
+            <label for="CBObjectsVis">Turn</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range  short-range" min="0" max="100" step="1" id="TurningAnimSpeed"
+              value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBClipAnim" name="CBClipAnim">
+            <label for="CBObjectsVis">Clip</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range  short-range" min="0" max="100" step="1" id="ClipAnimSpeed" value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBBuildAnim" name="CBBuildAnim" onchange="CBBuildAnimChg()">
+            <label for="CBObjectsVis" class="small">Build</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range short-range" min="0" max="100" step="1" id="BuildAnimSpeed" value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBLiftAnim" name="CBLiftAnim" onchange="CBLiftAnimChg()">
+            <label for="CBObjectsVis" class="small">Lift</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range short-range" min="0" max="100" step="1" id="LiftAnimSpeed" value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBShuttleAnim" name="CBShuttleAnim" onchange="CBShuttleAnimChg()">
+            <label for="CBObjectsVis" class="small">Shuttle</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range short-range" min="0" max="100" step="1" id="ShuttleAnimSpeed"
+              value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col-5">
+            <input type="checkbox" id="CBTTAnim" name="CBTTAnim">
+            <label for="CBObjectsVis" class="small">TT</label>
+          </div>
+          <div class="col-7">
+            <input type="range" class="form-range short-range" min="0" max="100" step="1" id="TTAnimSpeed" value="0">
+          </div>
+        </div>
+        <div class="row mb-0">
+          <div class="col">
+            <h6 class="medium">BOM</h6>
+          </div>
+        </div>
+        <div id="BOMContainer">
+
+        </div>
+      </div>
+    </div>
+    
+    <div class="contents">
+      <canvas id="babylon-container" class="content1"></canvas>
+    </div>
+    <div id="LoadingScreenDiv" class="LoadingScreen" style="display: block;">
+      <div class="container">
+        <ul id="MessageList" class="list-group mt-3 MessageList"></ul>
+      </div>
+    </div>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="/static/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static//js/bootstrap.min.js"></script>
+
+
+    <script src="/static/js/_Main.js"></script>
+    <script src="/static/js/_ProjectObjects.js"></script>
+    <script src="/static/js/_FileLoader.js"></script>
+    <script src="/static/js/_SceneControl.js"></script>
+
+
+    <script>
+
+      var ProjectName = "{{ PName }}"
+      var ProjectVersion = "{{ PVer }}"
+
+      canvas.addEventListener('pointerdown', function (evt) {
+        if (evt.button === 2) {
+          isDragging = true;
+          startingPoint.x = evt.clientX;
+          startingPoint.y = evt.clientY;
+        }
+      }, false);
+
+      canvas.addEventListener('pointermove', function (evt) {
+        if (isDragging) {
+          let deltaX = evt.clientX - startingPoint.x;
+          let deltaY = evt.clientY - startingPoint.y;
+
+          if (camera.mode === BABYLON.Camera.ORTHOGRAPHIC_CAMERA) {
+            let orthoHorizontalSize = camera.orthoRight - camera.orthoLeft;
+            let orthoVerticalSize = camera.orthoTop - camera.orthoBottom;
+
+            deltaX = -(deltaX / camera.getEngine().getRenderWidth()) * orthoHorizontalSize;
+            deltaY = -(deltaY / camera.getEngine().getRenderHeight()) * orthoVerticalSize;
+          } else {
+            deltaX /= camera.getEngine().getRenderWidth();
+            deltaY /= camera.getEngine().getRenderHeight();
+
+            let movementScale = PanningSensitivity * camera.radius;
+            deltaX *= movementScale;
+            deltaY *= movementScale;
+          }
+
+          let cameraToTarget = camera.target.subtract(camera.position);
+          let right = BABYLON.Vector3.Cross(cameraToTarget, camera.upVector).normalize();
+          let up = BABYLON.Vector3.Cross(right, cameraToTarget).normalize();
+
+          right.scaleInPlace(-deltaX);
+          up.scaleInPlace(-deltaY); // Y is inverted to match screen coordinates
+
+          camera.target.addInPlace(right);
+          camera.target.addInPlace(up);
+
+          updateTargetX(camera.target.x)
+          updateTargetY(camera.target.y)
+          updateTargetZ(camera.target.z)
+          startingPoint.x = evt.clientX;
+          startingPoint.y = evt.clientY;
+        }
+      }, false);
+
+      canvas.addEventListener('pointerup', function (evt) {
+        if (evt.button === 2) {
+          isDragging = false;
+        }
+      }, false);
+
+
+      var createScene = function () {
+        console.log('from createScene again')
+        var Scene = new BABYLON.Scene(engine);
+        engine.displayLoadingUI()
+        assetsManager = new BABYLON.AssetsManager(Scene);
+
+        CreateMaterials();
+        Scene.clearColor = new BABYLON.Color4(1, 1, 1, 1);
+        camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, Math.PI / 2.5, 8000, new BABYLON.Vector3(0, 0, 0), Scene);
+        camera.attachControl(canvas, true);
+        camera.lowerRadiusLimit = 1;
+        camera.upperRadiusLimit = 500000;
+        camera.maxZ = 500000;
+        camera.wheelPrecision = 0.01;
+
+        camera.lowerBetaLimit = 0.0001; // Minimum beta
+        camera.upperBetaLimit = Math.PI - 0.0001; // Maximum beta
+
+        camera.fov = Math.PI / 4;
+        light = new BABYLON.DirectionalLight("hemiLight", new BABYLON.Vector3(-1, -2, -1), scene);
+        light.intensity = 1;
+        Scene.useLogarithmicDepth = true;
+
+
+        Scene.registerAfterRender(function () {
+          var target = camera.target;
+          var radius = camera.radius;
+          var alpha = camera.alpha;
+          var beta = camera.beta;
+
+          var x = target.x + radius * Math.sin(beta) * Math.cos(alpha);
+          var y = target.y + radius * Math.cos(beta);
+          var z = target.z + radius * Math.sin(beta) * Math.sin(alpha);
+          light.position = new BABYLON.Vector3(x * 2, y * 2, z * 2);
+        });
+
+        camera.onViewMatrixChangedObservable.add((event) => {
+          console.log('before call AlphaValue', camera);
+          updateAlphaValue(camera.alpha / Math.PI * 180)
+          updateBetaValue(camera.beta / Math.PI * 180)
+          updateDistanceValue(camera.radius)
+          var cameraDir = camera.getTarget().subtract(camera.position).normalize();
+          light.direction = cameraDir;
+        });
+        return Scene;
+      };
+
+
+      window.addEventListener("wheel", function (e) {
+        if (camera.mode === BABYLON.Camera.ORTHOGRAPHIC_CAMERA) {
+          const zoomFactor = -e.deltaY * 5;
+          camera.orthoTop -= zoomFactor;
+          camera.orthoBottom += zoomFactor;
+          camera.orthoLeft += zoomFactor * engine.getAspectRatio(camera);
+          camera.orthoRight -= zoomFactor * engine.getAspectRatio(camera);
+        }
+      });
+
+      window.addEventListener("DOMContentLoaded", function () {
+        canvas.onclick = function (event) {
+          var pickResult = scene.pick(scene.pointerX, scene.pointerY);
+
+          if (pickResult.hit) {
+            var mesh = pickResult.pickedMesh;
+            selectedMeshName = pickResult.pickedMesh.name;
+            console.log("Selected mesh: ", selectedMeshName);
+          }
+        };
+
+        window.addEventListener('resize', function () {
+          engine.resize();
+          if (camera.mode === BABYLON.Camera.ORTHOGRAPHIC_CAMERA) {
+            var aspect = engine.getAspectRatio(camera);
+            var orthoHeight = camera.orthoTop - camera.orthoBottom;
+            console.log(orthoHeight)
+            camera.orthoTop = orthoHeight / 2;
+            camera.orthoBottom = -orthoHeight / 2;
+            camera.orthoLeft = -orthoHeight / 2 * aspect;
+            camera.orthoRight = orthoHeight / 2 * aspect;
+          }
+        });
+      });
+
+      function toggleSidebar(side) {
+        var sidebar = document.getElementById(side + 'Sidebar');
+        var button = sidebar.getElementsByTagName('button')[0];
+
+        // If sidebar is not minimized
+        if (sidebar.style.width !== button.offsetWidth + 'px') {
+          // Store the current width if it's not stored yet
+          if (!sidebar.getAttribute('data-fullwidth')) {
+            sidebar.setAttribute('data-fullwidth', sidebar.offsetWidth);
+          }
+          // Minimize the sidebar to the button's width
+          sidebar.style.width = button.offsetWidth + 'px';
+          // Hide all children except the button
+          button.style.transform = side === 'left' ? '' : 'rotate(180deg)';
+          Array.from(sidebar.children).forEach(child => {
+            if (child !== button) child.style.display = 'none';
+          });
+        } else {
+          // Restore the sidebar's width
+          sidebar.style.width = sidebar.getAttribute('data-fullwidth') + 'px';
+          // Show all children
+          button.style.transform = side === 'left' ? 'rotate(180deg)' : '';
+          Array.from(sidebar.children).forEach(child => {
+            child.style.display = '';
+          });
+        }
+      }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+import ezdxf
+from matplotlib.patches import Arc
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load the DXF file
+file_path = 'denemeler.dxf'
+doc = ezdxf.readfile(file_path)
+msp = doc.modelspace()
+
+# Function to calculate arc parameters from bulge
+
+# Function to plot the polyline with segments
+def plot_polyline_with_segments(msp, num_segments=10):
+    fig, ax = plt.subplots()
+    polylines = msp.query('LWPOLYLINE')
+    for polyline in polylines:
+        vertices = polyline.get_points(format='xyb')
+        is_closed = polyline.closed
+
+        # Store all x and y coordinates of vertices for dot plotting
+        all_x = []
+        all_y = []
+
+        for i in range(len(vertices) - 1 + is_closed):
+            start = np.array(vertices[i % len(vertices)][:2])
+            end = np.array(vertices[(i + 1) % len(vertices)][:2])
+            bulge = vertices[i % len(vertices)][2]
+            
+            if bulge == 0:  # Straight line segment
+                ax.plot([start[0], end[0]], [start[1], end[1]], color='blue')
+                all_x.extend([start[0], end[0]])
+                all_y.extend([start[1], end[1]])
+            else:  # Arc segment
+                (center_x, center_y), start_angle, end_angle, radius = ezdxf.math.bulge_to_arc(start, end, bulge)
+                print(center_x,center_y)
+                arc = Arc((center_x, center_y), 2 * radius, 2 * radius, theta1=start_angle, theta2=end_angle, color='red')
+                ax.add_patch(arc)
+                # For dots, calculate segment points along the arc
+                theta = np.radians(np.linspace(start_angle, end_angle, num_segments))
+                arc_x = center_x + radius * np.cos(theta)
+                arc_y = center_y + radius * np.sin(theta)
+                all_x.extend(arc_x)
+                all_y.extend(arc_y)
+
+        # Plot dots at all vertices
+        ax.scatter(all_x, all_y, color='green', s=10, zorder=5)
+
+    ax.set_aspect('equal', 'datalim')
+    ax.autoscale_view()
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('DXF Polyline with Segmented Arcs')
+    plt.grid(True)
+    plt.show()
+
+plot_polyline_with_segments(msp, num_segments=20)
+
